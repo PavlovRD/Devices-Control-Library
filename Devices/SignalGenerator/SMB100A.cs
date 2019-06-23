@@ -452,8 +452,6 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             }
         }
 
-        /**/
-
         /// <summary>
         ///     Queries the input sensitivity of the externally applied signal for frequency modulation.
         ///     The returned value reports the sensitivity in Hz/V.It is assigned to the voltage value for full modulation of the input signal.
@@ -479,4 +477,4 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
 
         #endregion
     }
-}+
+}
