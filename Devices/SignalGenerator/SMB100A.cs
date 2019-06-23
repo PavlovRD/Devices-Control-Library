@@ -54,7 +54,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             SWE
         }
 
-        public enum FREQuencySTEPMode
+        public enum FrequencyStepMode
         {
             DEC,
             USER
@@ -76,7 +76,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             INV
         }
 
-        public enum PulmTriggerMode
+        public enum PulseModulationTriggerMode
         {
             /// <summary>
             ///     The pulse modulation is generated continuously.
@@ -101,19 +101,19 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             SINGl
         }
 
-        public enum PulmTriggerExternalImpedance
+        public enum PulseModulationTriggerExternalImpedance
         {
             G50,
             G10K
         }
 
-        public enum PulmTriggerExternalSlope
+        public enum PulseModulationTriggerExternalSlope
         {
             NEG,
             POS
         }
 
-        public enum PulmTriggerExternalGatePolarity
+        public enum PulseModulationTriggerExternalGatePolarity
         {
             NORM,
             INV
@@ -161,6 +161,14 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         }
 
         public enum PulseWidthType
+        {
+            s,
+            ns,
+            ms,
+            us
+        }
+
+        public enum PulseDelayType
         {
             s,
             ns,
@@ -693,17 +701,17 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         /// <summary>
         ///     Selects the trigger mode for pulse modulation.
         /// </summary>
-        /// <param name="pulmTriggerMode">Value of trigger for pulse modulation</param>
-        public void PulseModulationSetTriggerMode(PulmTriggerMode pulmTriggerMode)
+        /// <param name="pulseModulationTriggerMode">Value of trigger for pulse modulation</param>
+        public void PulseModulationSetTriggerMode(PulseModulationTriggerMode pulseModulationTriggerMode)
         {
             try
             {
-                _lanExchanger.SendWithoutRequest(":PULM:TRIG:MODE " + pulmTriggerMode);
+                _lanExchanger.SendWithoutRequest(":PULM:TRIG:MODE " + pulseModulationTriggerMode);
             }
             catch (Exception exception)
             {
                 throw new Exception("Failed to set the trigger mode in pulse modilation in value of " +
-                                    pulmTriggerMode + ". Reason: " +
+                                    pulseModulationTriggerMode + ". Reason: " +
                                     exception.Message);
             }
         }
@@ -711,17 +719,17 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         /// <summary>
         ///     Sets the mode of the pulse generator.
         /// </summary>
-        /// <param name="pulmTriggerMode">Value of mode for pulse generator</param>
-        public void PulseModulationSetMode(PulmTriggerMode pulmTriggerMode)
+        /// <param name="pulseModulationMode">Value of mode for pulse generator</param>
+        public void PulseModulationSetMode(PulseModulationMode pulseModulationMode)
         {
             try
             {
-                _lanExchanger.SendWithoutRequest(":PULM:MODE " + pulmTriggerMode + ";");
+                _lanExchanger.SendWithoutRequest(":PULM:MODE " + pulseModulationMode + ";");
             }
             catch (Exception exception)
             {
                 throw new Exception("Failed to set mode in pulse generator in value of " +
-                                    pulmTriggerMode + ". Reason: " +
+                                    pulseModulationMode + ". Reason: " +
                                     exception.Message);
             }
         }
@@ -733,7 +741,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         /// </summary>
         /// <param name="pulseWidth">Value of pulse width</param>
         /// <param name="pulseWidthType">Value of type pulse width</param>
-        public void PulseModulationSetPulmWidth(double pulseWidth, PulseWidthType pulseWidthType)
+        public void PulseModulationSetWidth(double pulseWidth, PulseWidthType pulseWidthType)
         {
             try
             {
@@ -746,21 +754,27 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             }
         }
 
-        public enum PulseDelayType
+        /// <summary>
+        ///     Gets the width of the generated pulse.
+        /// </summary>
+        public double PulseModulationGetWidth()
         {
-            s,
-            ns,
-            ms,
-            us
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble(":PULM:WIDT?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the width of the generated pulse. Reason: " + exception.Message);
+            }
         }
-
 
         /// <summary>
         ///     Sets the pulse delay.
         /// </summary>
         /// <param name="pulseDelay">Value of pulse delay</param>
         /// <param name="pulseDelayType">Value of pulse delay type</param>
-        public void PulseModulationSetPulmInternalDelay(double pulseDelay, PulseDelayType pulseDelayType)
+        public void PulseModulationSetDelay(double pulseDelay, PulseDelayType pulseDelayType)
         {
             try
             {
@@ -774,12 +788,87 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         }
 
         /// <summary>
+        ///     Gets the pulse delay.
+        /// </summary>
+        public double PulseModulationGetDelay()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble(":PULM:DEL?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the pulse delay. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the delay from the start of the first pulse to the start of the second pulse.
+        ///     Range: 10 ns to 100 s, Increment: 5 ns, Default value: 3 us
+        /// </summary>
+        /// <param name="pulseDelay">Value of pulse double delay</param>
+        /// <param name="pulseDelayType">Value of pulse delay type</param>
+        public void PulseModulationSetDoubleDelay(double pulseDelay, PulseDelayType pulseDelayType)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":PULM:DOUB:DEL " + pulseDelay + " " + pulseDelayType + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception(
+                    "Failed to set the the delay from the start of the first pulse to the start of the second pulse in value of " +
+                    pulseDelay +
+                    pulseDelayType + ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        /// Enables/disables double pulse generation.The two pulses are generated in one pulse
+        /// period.
+        /// </summary>
+        ///<param name="state">True - Double pulse generation is on, False - Double pulse generation is off</param>
+        public void PulseModulationStateControlDouble(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":PULM:DOUB:STAT " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set state pulm double pulse generation in value of" +
+                                    (state ? "ON" : "OFF") +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the width of the second pulse in case of double pulse generation.
+        /// </summary>
+        /// <param name="valueOfWidth">Value of width pulse</param>
+        /// <param name="pulseWidthType">Value of type width pulse</param>
+        public void PulseModulationDoubleWidth(double valueOfWidth, PulseWidthType pulseWidthType)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":PULM:DOUB:WIDT " + valueOfWidth + " " + pulseWidthType + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception(
+                    "Failed to set the width of the second pulse in case of double pulse generation in value of" +
+                    valueOfWidth + pulseWidthType +
+                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
         ///     Sets the period of the generated pulse. 
         ///     The period determines the repetition frequency of the internal signal.
         /// </summary>
         /// <param name="valueOfPertiod">Value of pulm period</param>
         /// <param name="pulmPeriodType">Value of type pulm period</param>
-        public void PulseModulationSetMode(double valueOfPertiod, PulsePeriodType pulmPeriodType)
+        public void PulseModulationSetPeriod(double valueOfPertiod, PulsePeriodType pulmPeriodType)
         {
             try
             {
@@ -792,38 +881,54 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             }
         }
 
+        /// <summary>
+        ///     Gets the period of the generated pulse. 
+        /// </summary>
+        public double PulseModulationGetPeriod()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble(":PULM:PER?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get pulm period. Reason: " + exception.Message);
+            }
+        }
 
         /// <summary>
         ///     Selects the impedance for external pulse trigger.
         /// </summary>
-        /// <param name="pulmTriggerExternalImpedance">Value of external impedance</param>
-        public void PulseModulationSetExternalImpedance(PulmTriggerExternalImpedance pulmTriggerExternalImpedance)
+        /// <param name="pulseModulationTriggerExternalImpedance">Value of external impedance</param>
+        public void PulseModulationSetExternalImpedance(
+            PulseModulationTriggerExternalImpedance pulseModulationTriggerExternalImpedance)
         {
             try
             {
-                _lanExchanger.SendWithoutRequest("SOUR:PULM:TRIG:EXT:IMP " + pulmTriggerExternalImpedance);
+                _lanExchanger.SendWithoutRequest("SOUR:PULM:TRIG:EXT:IMP " + pulseModulationTriggerExternalImpedance);
             }
             catch (Exception exception)
             {
                 throw new Exception("Failed to set the trigger mode external impedance in value of " +
-                                    pulmTriggerExternalImpedance + ". Reason: " + exception.Message);
+                                    pulseModulationTriggerExternalImpedance + ". Reason: " + exception.Message);
             }
         }
 
         /// <summary>
         ///     Sets the polarity of the active slope of an applied trigger at the PULSE EXT connector
         /// </summary>
-        /// <param name="pulmTriggerExternalSlope">Value of external impedance</param>
-        public void PulseModulationSetExternalSlope(PulmTriggerExternalSlope pulmTriggerExternalSlope)
+        /// <param name="pulseModulationTriggerExternalSlope">Value of external impedance</param>
+        public void PulseModulationSetExternalSlope(
+            PulseModulationTriggerExternalSlope pulseModulationTriggerExternalSlope)
         {
             try
             {
-                _lanExchanger.SendWithoutRequest("SOUR:PULM:TRIG:EXT:SLOP " + pulmTriggerExternalSlope);
+                _lanExchanger.SendWithoutRequest("SOUR:PULM:TRIG:EXT:SLOP " + pulseModulationTriggerExternalSlope);
             }
             catch (Exception exception)
             {
                 throw new Exception("Failed to set the trigger mode external slope in value of " +
-                                    pulmTriggerExternalSlope + ". Reason: " + exception.Message);
+                                    pulseModulationTriggerExternalSlope + ". Reason: " + exception.Message);
             }
         }
 
@@ -831,7 +936,8 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         ///     Selects the polarity of the Gate signal. The signal is supplied via the PULSE EXT connector.
         /// </summary>
         /// <param name="triggerExternalGatePolarity">Value of trigger external gate polarity</param>
-        public void PulseModulationSetPolarityGateSignal(PulmTriggerExternalGatePolarity triggerExternalGatePolarity)
+        public void PulseModulationSetPolarityGateSignal(
+            PulseModulationTriggerExternalGatePolarity triggerExternalGatePolarity)
         {
             try
             {
@@ -1038,7 +1144,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         ///     value with the rotary knob.
         /// </summary>
         /// <param name="frequencyStepMode">Mode for Step frequency</param>
-        public void FrequencySetStepMode(FREQuencySTEPMode frequencyStepMode)
+        public void FrequencySetStepMode(FrequencyStepMode frequencyStepMode)
         {
             try
             {
