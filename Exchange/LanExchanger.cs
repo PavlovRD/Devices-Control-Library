@@ -25,5 +25,10 @@ namespace DevicesControlLibrary.Exchange
         {
 
         }
+
+        public double SendWithRequestDouble(string command)
+        {
+            return 0.0;
+        }
     }
 }
