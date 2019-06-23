@@ -38,6 +38,27 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             INT_EXT
         }
 
+        public enum Frequency
+        {
+            HZ,
+            KHZ,
+            MHZ,
+            GHZ
+        }
+
+        public enum FREQuencyMode
+        {
+            CW,
+            FIX,
+            SWE
+        }
+
+        public enum FREQuencySTEPMode
+        {
+            DEC,
+            USER
+        }
+
         #endregion
 
         #region Private Members Variable
@@ -468,6 +489,213 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             catch (Exception exception)
             {
                 throw new Exception("Failed to get of input sens value. Reason: " + exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Frequency 
+
+        /// <summary>
+        ///     Sets the frequency of the RF output signal.
+        /// </summary>
+        /// <param name="valueOfFreq">Value frequency in MHz</param>
+        /// <param name="frequency">Value of Hz, kHz, mHz, GHz</param>
+        public void FrequencySetValueOutputSignal(double valueOfFreq, Frequency frequency)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ " + valueOfFreq + " " + frequency + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency in value of " + valueOfFreq + frequency +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Gets to the frequency value
+        /// </summary>
+        /// <returns></returns>
+        public double FrequencyGetValueOutputSignal()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble(":FREQ?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get frequency value. Reason: " + exception.Message);
+            }
+        }
+
+        //TODO: NOT USING! REQUIRED TEST
+
+        /// <summary>
+        ///     Sets the center frequency of the RF sweep range.
+        /// </summary>
+        /// <param name="valueOfCenterFreq">Value center frequency in MHz</param>
+        public void FrequencySetCenterRfSweepRange(double valueOfCenterFreq)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:CENT " + valueOfCenterFreq + " MHz;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set center frequency in value of " + valueOfCenterFreq +
+                                    " MHz. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Selects the frequency mode for the generating the RF output signal. The selected
+        ///     mode determines the parameters to be used for further frequency settings.
+        /// </summary>
+        /// <param name="frequencyMode">Frequency mode: 
+        ///     CW_FIX - Sets the fixed frequency mode, 
+        ///     SWE - Sets the sweep mode. The instrument processes the frequency settings in defined sweep steps.</param>
+        public void FrequencySetMode(FrequencyMode frequencyMode)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:MODE " + frequencyMode + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency mode in value of " + frequencyMode +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the value for the multiplication factor of a subsequent downstream instrument.
+        /// </summary>
+        /// <param name="multiplier">Value of multiplication</param>
+        public void FrequencySetMultiplier(double multiplier)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:MULT " + multiplier + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency multiplier in value of " + multiplier +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the frequency offset of a downstream instrument, for example a mixer.
+        /// </summary>
+        /// <param name="offset">Value of offset in kHz</param>
+        public void FrequencySetOffset(double offset)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:OFFS " + offset + "kHz;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency offset in value of " + offset +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Determines the extent of the frequency sweep range. 
+        /// </summary>
+        /// <param name="span">Value of span in MHz</param>
+        public void FrequencySetSpan(double span)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:SPAN " + span + "MHz;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency span in value of " + span +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the start frequency for the RF sweep.
+        ///     This parameter relates to the center frequency and span.If you change the frequency, these parameters change accordingly.
+        /// </summary>
+        /// <param name="startValue">Value of start frequency</param>
+        /// <param name="frequency">Frequency type</param>
+        public void FrequencySetStart(double startValue, Frequency frequency)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:SPAN " + startValue + " " + frequency + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency start in value of " + startValue + frequency +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the stop frequency for the RF sweep.
+        ///     This parameter is related to the center frequency and span.If you change the frequency, these parameters change accordingly
+        /// </summary>
+        /// <param name="stopValue">Value of stop frequency</param>
+        /// <param name="frequency">Frequency type</param>
+        public void FrequencySetStop(double stopValue, Frequency frequency)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:STOP " + stopValue + " " + frequency + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency stop in value of " + stopValue + frequency + ". Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the step width for FREQ:STEP:MODE USER.
+        ///     To adjust the frequency step by step with this step size, use the FREQ:UP and
+        ///     FREQ:DOWN commands.
+        /// </summary>
+        /// <param name="stepValue">Value of step in kHz</param>
+        public void FrequencySetStep(double stepValue)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:STEP " + stepValue + " kHz;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency step in value of " + stepValue + " kHz. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Activates(USER) or deactivates(DECimal) the user-defined step width used when
+        ///     varying the frequency value with the frequency values UP/DOWN.The command is
+        ///     linked to the command "Variation Active" for manual control, i.e.the command also
+        ///     activates/deactivates the user-defined step width used when varying the frequency
+        ///     value with the rotary knob.
+        /// </summary>
+        /// <param name="frequencyStepMode">Mode for Step frequency</param>
+        public void FrequencySetStepMode(FREQuencySTEPMode frequencyStepMode)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":FREQ:STEP:MODE " + frequencyStepMode + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set frequency step mode in value of " + frequencyStepMode +
+                                    ". Reason: " +
+                                    exception.Message);
             }
         }
 
