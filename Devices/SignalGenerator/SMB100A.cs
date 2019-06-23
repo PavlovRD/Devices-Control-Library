@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,6 +58,16 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         {
             DEC,
             USER
+        }
+
+        public enum PowMode
+        {
+            DBM,
+            DBuV,
+            nv,
+            uv,
+            mv,
+            V
         }
 
         #endregion
@@ -119,7 +130,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         {
             try
             {
-                return _lanExchanger.SendWithRequestBool("*OPC?;") == 1;
+                return _lanExchanger.SendWithRequestInt("*OPC?;") == 1;
             }
             catch (Exception exception)
             {
@@ -173,7 +184,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         #region Base commands
 
         /// <summary>
-        ///     Control state for all modulation in devices
+        ///     Sets control state for all modulation in devices
         /// </summary>
         /// <param name="state">True - modulation is on, false - modulation is off</param>
         public void ModulationStateControl(bool state)
@@ -184,8 +195,24 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
             }
             catch (Exception exception)
             {
-                throw new Exception("Cloud not process source all modulation " + (state ? "ON" : "OFF") +
-                                    " device command: " + exception.Message);
+                throw new Exception("Failed to set state control all modulation in " + (state ? "ON" : "OFF") +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Gets control state for modulation
+        /// </summary>
+        /// <returns>True - modulation is on, False - modulation is off</returns>
+        public bool ModulationGetStateControl()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt(":SOUR:MOD:STAT?;") == 1;
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get state modulation" + ". Reason: " + exception.Message);
             }
         }
 
@@ -499,7 +526,7 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
         /// <summary>
         ///     Sets the frequency of the RF output signal.
         /// </summary>
-        /// <param name="valueOfFreq">Value frequency in MHz</param>
+        /// <param name="valueOfFreq">Value frequency</param>
         /// <param name="frequency">Value of Hz, kHz, mHz, GHz</param>
         public void FrequencySetValueOutputSignal(double valueOfFreq, Frequency frequency)
         {
@@ -696,6 +723,83 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
                 throw new Exception("Failed to set frequency step mode in value of " + frequencyStepMode +
                                     ". Reason: " +
                                     exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Power
+
+        /// <summary>
+        ///     Sets the output signal in pow value.
+        /// </summary>
+        /// <param name="valueOfPow">Value of pow</param>
+        /// <param name="powMode">Value of pow mode</param>
+        public void PowSetValue(double valueOfPow, PowMode powMode)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(
+                    ":POW " + Convert.ToString(valueOfPow, CultureInfo.InvariantCulture).Replace(',', '.') + " " +
+                    powMode + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set pow in value of " + valueOfPow + powMode +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Gets to the pow value
+        /// </summary>
+        /// <returns>Value of Pow</returns>
+        public double PowGetValue()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble(":POW?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get pow value. Reason: " + exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Output Subsystem
+
+        /// <summary>
+        ///     Control RF output
+        /// </summary>
+        /// <param name="rfState">True - Rf otput state on, False - Rf output state off</param>
+        public void OutputRfControlState(bool rfState)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":OUTPut:STAT " + (rfState ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set RF-Output state in " + (rfState ? "ON" : "OFF") +
+                                    ". Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Gets control state for RF
+        /// </summary>
+        /// <returns>True - RF is on, False - RF is off</returns>
+        public bool OutputRfControlState()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt(":OUTP:STAT?;") == 1;
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get state RF. Reason: " + exception.Message);
             }
         }
 

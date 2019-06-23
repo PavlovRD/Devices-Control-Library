@@ -11,7 +11,7 @@ namespace DevicesControlLibrary.Exchange
         public LanExchanger(string ipAddress, int ipPort) {
         }
 
-        public int SendWithRequestBool(string command)
+        public int SendWithRequestInt(string command)
         {
             return 0;
         }
