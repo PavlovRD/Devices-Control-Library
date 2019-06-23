@@ -8,5 +8,6 @@ namespace DevicesControlLibrary
 {
     public class DeviceExchangeManager
     {
+
     }
 }

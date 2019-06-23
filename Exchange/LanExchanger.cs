@@ -8,5 +8,22 @@ namespace DevicesControlLibrary.Exchange
 {
     class LanExchanger
     {
+        public LanExchanger(string ipAddress, int ipPort) {
+        }
+
+        public int SendWithRequestBool(string command)
+        {
+            return 0;
+        }
+
+        public string SendWithRequestString(string command)
+        {
+            return "";
+        }
+
+        public void SendWithoutRequest(string command)
+        {
+
+        }
     }
 }
