@@ -119,6 +119,106 @@ namespace DevicesControlLibrary.Devices.SignalGenerator
 
         #endregion
 
+        #region Source commands
+
+        #region Base commands
+
+        /// <summary>
+        ///     Control state for all modulation in devices
+        /// </summary>
+        /// <param name="state">True - modulation is on, false - modulation is off</param>
+        public void ModulationStateControl(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":SOUR:MOD:ALL:STAT " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Cloud not process source all modulation " + (state ? "ON" : "OFF") +
+                                    " device command: " + exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Amplitude Modulation
+
+        /// <summary>
+        ///     Control state for aplitude modulation in devices
+        /// </summary>
+        /// <param name="state">True - modulation is on, false - modulation is off</param>
+        public void AmplitudeModulationStateControl(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest(":SOUR:AM:STAT " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Cloud not process source aplitude modulation " + (state ? "ON" : "OFF") +
+                                    " device command: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Selects the coupling mode for the external amplitude modulation signal.
+        ///     Default AC mode
+        /// </summary>
+        /// <param name="type">True - AC mode, False - DC mode</param>
+        public void AmplitudeModulationCouplingMode(bool type)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("SOUR:AM:EXT:COUP " + (type ? "AC" : "DC") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Cloud not process amplitude modulation set coupling " + (type ? "AC" : "DC") +
+                                    " device command: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Selects the modulation signal source for amplitude modulation.
+        /// </summary>
+        /// <param name="type">True - internal source, False - external source</param>
+        public void AmplitudeModulationSelectSource(bool type)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("SOUR:AM:SOUR " + (type ? "INT" : "EXT") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Cloud not process amplitude modulation set signal source    " +
+                                    (type ? "INT" : "EXT") +
+                                    " device command: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Selects exponential or linear amplitude modulation.
+        /// </summary>
+        /// <param name="type">True - linear amplitude modulation, False - exponential amplitude modulation</param>
+        public void AmplitudeModulationSelectAmType(bool type)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("SOUR:AM:TYPE " + (type ? "LIN" : "EXP") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Cloud not process amplitude modulation select type " +
+                                    (type ? "LIN" : "EXP") +
+                                    " device command: " + exception.Message);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
         #endregion
     }
 }
