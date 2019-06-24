@@ -13,6 +13,19 @@ namespace DevicesControlLibrary.Devices.PowerSupply
     /// </summary>
     public sealed class N5746A
     {
+        #region Public Member Variables
+
+        /// <summary>
+        ///     Calibration level
+        /// </summary>
+        public enum CalibrationLevel
+        {
+            P1,
+            P2
+        }
+
+        #endregion 
+
         #region Private Members Variable
 
         private readonly LanExchanger _lanExchanger;
@@ -549,14 +562,6 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             }
         }
 
-        /// <summary>
-        ///     Calibration level
-        /// </summary>
-        public enum CalibrationLevel
-        {
-            P1,
-            P2
-        }
 
         /// <summary>
         ///     This command selects the next point in the calibration sequence.
@@ -695,6 +700,42 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             catch (Exception exception)
             {
                 throw new Exception("Failed to set initiates the calibration of the output voltage value of command. Reason: " + exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Measure commands
+
+        /// <summary>
+        ///     Returns current consumption in amperes
+        /// </summary>
+        /// <return>Value of current in ampers</return>
+        public double GetMeasureCurrent()
+        {
+            try
+            {
+               return _lanExchanger.SendWithRequestDouble("MEAS:CURR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get measurement current in amperes value of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Returns output voltage in volts
+        /// </summary>
+        /// <return>Value of output voltage in volts</return>
+        public double GetMeasureVolt()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble("MEAS:VOLT?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get measurement output voltage in volt value of command. Reason: " + exception.Message);
             }
         }
 
