@@ -24,7 +24,16 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             P2
         }
 
-        #endregion 
+        /// <summary>
+        ///     Output Power-On State values
+        /// </summary>
+        public enum OutputPowerOnState
+        {
+            RST,
+            AUTO
+        }
+
+        #endregion
 
         #region Private Members Variable
 
@@ -699,7 +708,9 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             }
             catch (Exception exception)
             {
-                throw new Exception("Failed to set initiates the calibration of the output voltage value of command. Reason: " + exception.Message);
+                throw new Exception(
+                    "Failed to set initiates the calibration of the output voltage value of command. Reason: " +
+                    exception.Message);
             }
         }
 
@@ -715,11 +726,12 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         {
             try
             {
-               return _lanExchanger.SendWithRequestDouble("MEAS:CURR?;");
+                return _lanExchanger.SendWithRequestDouble("MEAS:CURR?;");
             }
             catch (Exception exception)
             {
-                throw new Exception("Failed to get measurement current in amperes value of command. Reason: " + exception.Message);
+                throw new Exception("Failed to get measurement current in amperes value of command. Reason: " +
+                                    exception.Message);
             }
         }
 
@@ -735,7 +747,109 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             }
             catch (Exception exception)
             {
-                throw new Exception("Failed to get measurement output voltage in volt value of command. Reason: " + exception.Message);
+                throw new Exception("Failed to get measurement output voltage in volt value of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Output commands
+
+        /// <summary>
+        ///     This command enables or disables the specified output(s). 
+        ///     The enabled state is On(1); the disabled state is Off(0). 
+        ///     The state of a disabled output is a condition of zero output 
+        ///     voltage and a zero source current(see <see cref="Reset">*RST</see>). 
+        /// </summary>
+        /// <param name="state">True - state is on, False - state is off</param>
+        public void SetOutputState(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("OUTP: " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set output state of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     The query returns False if the output is off, and True if the output is on.
+        /// </summary>
+        /// <returns>True - state is on, False - state is off</returns>
+        public bool GetOutputState()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("OUTP:STAT?;") == 1;
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get output state of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command determines if the power-on state will be determined by
+        ///     the reset state, or the settings the unit had when it was turned off.
+        ///     RST programs the unit to the reset state; AUTO programs the unit to the
+        ///     settings it had when it was turned off.The power-on state information is
+        ///     saved on non-volatile memory.
+        /// </summary>
+        /// <param name="outputPonState">Value of output power-on state</param>
+        public void SetOutputPowerOnState(OutputPowerOnState outputPonState)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("OUTP:PON:STAT " + outputPonState + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set output power on state of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Returns output power-on state
+        /// </summary>
+        /// <returns><see cref="OutputPowerOnState"/></returns>
+        public OutputPowerOnState GetOutputPowerOnState()
+        {
+            try
+            {
+                return (OutputPowerOnState) Enum.Parse(typeof(OutputPowerOnState),
+                    _lanExchanger.SendWithRequestString("OUTP:PON:STAT?;"));
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get output power on state of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command clears the latched signals that have disabled the output.
+        ///     The over-voltage and over-current conditions are always latching.
+        ///     The over-temperature condition, AC-fail condition, Enable pins, and SO pins
+        ///     are latching if OUTPut:PON:STATe is RST, and non-latching if OUTPut:PON:STATe is AUTO.
+        ///     All conditions that generate the fault must be removed before the latch  can be cleared.
+        ///     The output is then restored to the state it was in before the fault condition occurred.
+        /// </summary>
+        public void SetOutputProtectionClear()
+        {
+            try
+            {
+                _lanExchanger.SendWithRequestString("OUTP:PROT:CLE;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set output protection clear of command. Reason: " +
+                                    exception.Message);
             }
         }
 
