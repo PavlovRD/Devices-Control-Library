@@ -6,9 +6,13 @@ using System.Threading.Tasks;
 
 namespace DevicesControlLibrary.Exchange
 {
-    class LanExchanger
+    public class LanExchanger
     {
         public LanExchanger(string ipAddress, int ipPort) {
+            if (string.IsNullOrEmpty(ipAddress) || string.IsNullOrWhiteSpace(ipAddress))
+            {
+                throw new Exception("Ip-адрес не должен быть пустым");
+            }
         }
 
         public int SendWithRequestInt(string command)
