@@ -963,6 +963,10 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             }
         }
 
+        #endregion
+
+        #region Voltage commands
+
         /// <summary>
         ///     Set the output voltage when the voltage priority mode is active.
         /// </summary>
@@ -1069,7 +1073,7 @@ namespace DevicesControlLibrary.Devices.PowerSupply
                                     exception.Message);
             }
         }
-        
+
         ///<summary>
         ///     This command sets the over-voltage protection (OVP) level of the output. 
         ///     The values are programmed in volts.If the output voltage exceeds the OVP 
