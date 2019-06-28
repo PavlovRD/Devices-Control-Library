@@ -42,7 +42,7 @@
   <ItemGroup>
     <Compile Include="DeviceExchangeManager.cs" />
     <Compile Include="Devices\PowerSupply\N5746A.cs" />
-    <Compile Include="Devices\SignalGenerator\SMB100A.cs" />
+    <Compile Include="Devices\SignalGenerator\Smb100A.cs" />
     <Compile Include="Exchange\LanExchanger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -855,6 +855,262 @@ namespace DevicesControlLibrary.Devices.PowerSupply
 
         #endregion
 
+        #region Source commands
+
+        #region Current commands
+
+        /// <summary>
+        ///     Setting the output current in current priority mode
+        /// </summary>
+        /// <param name="valueOfCurrent">Value of current</param>
+        public void SetSourceCurrent(double valueOfCurrent)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("CURR " + valueOfCurrent + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set source current value in " + valueOfCurrent +
+                                    "A of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Getting the output currents
+        /// </summary>
+        public void GetSourceCurrent()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("CURR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get source current of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Setting the power of the running output signal
+        /// </summary>
+        /// <param name="valueOfCurrTrig">Value of current</param>
+        public void SetSourceTriggerCurrent(double valueOfCurrTrig)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("CURR:TRIG " + valueOfCurrTrig + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set source current trigger value in " + valueOfCurrTrig +
+                                    " of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Getting the power of the running output signal
+        /// </summary>
+        public void GetSourceTriggerCurrent()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("CURR:TRIG?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get source current trigger of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Allow or deny overcurrent protection.
+        ///     Setting the state of over-current protection
+        /// </summary>
+        /// <param name="state">True - protection is on, False - protection is off</param>
+        public void SetSourceProtectionCurrentState(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("CURR:PROT:STAT " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set state of over-current protection in value " + state +
+                                    " of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Getting the state of over-current protection - allow or deny
+        /// </summary>
+        /// <returns>True - is on, False - is off</returns>
+        public bool GetSourceProtectionCurrentState()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("CURR:PROT:STAT?;") == 1;
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get state of over-current protection of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Set the output voltage when the voltage priority mode is active.
+        /// </summary>
+        /// <param name="valueOfVoltage">Value of voltage</param>
+        public void SetSourceVoltage(double valueOfVoltage)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("VOLT " + valueOfVoltage + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the output voltage of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Get the output voltage when the voltage priority mode is active.
+        /// </summary>
+        /// <returns>Value of Volt</returns>
+        public double GetSourceVoltage()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble("VOLT?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the output voltage of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Set the voltage of the running output signal.
+        /// </summary>
+        /// <param name="valueOfTriggeredVolt">Value of triggered volt</param>
+        /// <returns>Value of triggered volt</returns>
+        public void SetSourceVoltageTriggered(double valueOfTriggeredVolt)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("VOLT:TRIG " + valueOfTriggeredVolt + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the voltage of the running output signal value of " +
+                                    valueOfTriggeredVolt + " of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Get the voltage of the running output signal.
+        /// </summary>
+        /// <returns>Value of triggered volt</returns>
+        public double GetSourceVoltageTriggered()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble("VOLT:TRIG?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the voltage of the running output signal of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        ///<summary>
+        ///     This command sets the low voltage limit of the output.
+        ///     When a low voltage limit has been set, the instrument will 
+        ///     ignore any programming commands that attempt to set the
+        ///     output voltage below the low voltage limit.
+        /// </summary>
+        /// <param name="lowValue">Value of low limit</param>
+        public void SetSourceVoltageLimitLow(double lowValue)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("VOLT:LIM:LOW " + lowValue + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the low voltage limit of the output value of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        ///<summary>
+        ///     This command gets the low voltage limit of the output.
+        /// </summary>
+        /// <returns>Value of low limit</returns>
+        public double GetSourceVoltageLimitLow()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble("VOLT:LIM:LOW?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the low voltage limit of the output of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+        
+        ///<summary>
+        ///     This command sets the over-voltage protection (OVP) level of the output. 
+        ///     The values are programmed in volts.If the output voltage exceeds the OVP 
+        ///     level, the output is disabled and OV is set in the Questionable Condition 
+        ///     status register.
+        /// </summary>
+        /// <returns>Value of voltage protection</returns>
+        public double GetSourceVoltageProtectionLevel()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestDouble("VOLT:PROT:LEV?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the value of voltage protection of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        ///<summary>
+        ///     This command gets the low voltage limit of the output.
+        /// </summary>
+        /// <param name="valueOfVoltageProtection">Value of voltage protection</param>
+        public void SetSourceVoltageProtectionLevel(double valueOfVoltageProtection)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("VOLT:PROT:LEV " + valueOfVoltageProtection + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the value of voltage protection of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
         #endregion
     }
 }
