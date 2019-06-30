@@ -29,8 +29,8 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         /// </summary>
         public enum OutputPowerOnState
         {
-            RST,
-            AUTO
+            Rst,
+            Auto
         }
 
         #endregion
@@ -149,6 +149,9 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         ///         <description>Bit position 3. Bit value 8. Bit name - DDE | Device-dependent error</description>
         ///     </item>
         ///     <item>
+        ///         <description>Bit position 2. Bit value 4. Bit name - QUE | Query error</description>
+        ///     </item>
+        ///     <item>
         ///         <description>Bit position 1. Undefined</description>
         ///     </item>
         ///     <item>
@@ -206,9 +209,32 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         }
 
         /// <summary>
-        ///     This command sets the OPC status bit when all pending operations have completed.
-        ///     Since your program can read this status bit on an interrupt basis, *OPC allows
-        ///      subsequent commands to be executed.
+        ///     This command causes the instrument to set the OPC bit (bit 0) of the
+        ///     Standard Event Status register when the instrument has completed all
+        ///     pending operations.
+        ///     Pending operations are complete when:
+        ///     <list type="bullet">
+        ///     <item>
+        ///         <description>All commands sent before *OPC have been executed.
+        ///         This includes overlapped commands.
+        ///         Most commands are sequential and are completed before the next command
+        ///         is executed.
+        ///         Commands that affect output voltage, current or state, relays, 
+        ///         and trigger actions are executed in parallel (or overlapped) with subsequent commands 
+        ///         sent to the power supply.
+        ///         The *OPC command provides notification that all overlapped commands have been completed.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <descriprion>All triggered actions are completed *OPC does not prevent processing
+        ///         of subsequent commands, but bit 0 will not be set until all pending operations are completed.
+        ///         *OPC? causes the instrument to place an ASCII "1" in the Output Queue when all pending operations
+        ///         are completed.Unlike *OPC, *OPC? prevents processing of all subsequent commands. 
+        ///         It can be used at the end of a command line so that the program can monitor the bus for data
+        ///         until it receives the "1" from the Output Queue.
+        ///         </descriprion>
+        ///     </item>
+        /// </list>
         /// </summary>
         public void SetOpcEnable()
         {
@@ -1222,7 +1248,7 @@ namespace DevicesControlLibrary.Devices.PowerSupply
                                     exception.Message);
             }
         }
-        
+
         /// <summary>
         ///     This command selects the trigger source for the output trigger system.
         ///     Only BUS can be selected as the trigger source.
@@ -1275,6 +1301,485 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         }
 
         #endregion
+
+        #endregion
+
+        #region Status commands
+
+        /// <summary>
+        ///     This command sets all defined bits in the Operation and Questionable PTR registers. 
+        ///     The command clears all defined bits in the Operation and Questionable NTR and Enable registers.
+        /// </summary>
+        public void SetStatusPreset()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:PRES;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status preset of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the value of the Operation Event register.
+        ///     The Event register is a read-only register, which stores (latches) 
+        ///     all events that are passed by the Operation NTR and/or PTR filter. 
+        ///     Reading the Operation Event register clears it. The bit configuration
+        ///      of the Operation status registers is as follows:
+        ///     <list type="bullet">
+        ///         <item>
+        ///         <description>Bit position: 15-11. Bit value: undefined. Bit name: undefined.</description>
+        ///         </item>
+        ///         <item>
+        ///         <description>Bit position: 10. Bit value: 1024. Bit name: CC | The output is in constant current.</description>
+        ///         </item>
+        ///         <item>
+        ///         <description>Bit position: 9. Bit value: undefined. Bit name: undefined.</description>
+        ///         </item>
+        ///         <item>
+        ///         <description>Bit position: 8. Bit value: 256. Bit name: CV | The output is in constant voltage.</description>
+        ///         </item>
+        ///         <item>
+        ///         <description>Bit position: 7-6. Bit value: undefined. Bit name: undefined.</description>
+        ///         </item>
+        ///         <item>
+        ///         <description>Bit position: 5. Bit value: 32. Bit name: WTG | The unit is waiting for a transinet trigger.</description>
+        ///         </item>
+        ///     </list>
+        /// </summary>
+        /// <returns>String contains value</returns>
+        public string GetStatusOperationEvent()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("STAT:OPER?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status operation event of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the value of the Operation Condition register. 
+        ///     That is a read-only register, which holds the live(unlatched)
+        ///     operational status of the power supply.
+        /// </summary>
+        /// <returns>String contains of value</returns>
+        public string GetStatusOperationCondition()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("STAT:OPER:COND?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status operation condition of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the value of the Operational Enable register.
+        ///     This register is a mask for enabling specific bits from the Operation Event register 
+        ///     to set the operation summary bit (OPER) of the Status Byte register. 
+        ///     This bit (bit 7) is the logical OR of all the Operational Event register bits that are
+        ///     enabled by the Status  operation Enable register. The Preset value = 0.
+        /// </summary>
+        /// <param name="valueOfOperationEnabled">Value of operation enabled</param>
+        public void SetStatusOperationEnabled(int valueOfOperationEnabled)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:OPER:ENAB " + valueOfOperationEnabled + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status operation enabled of value " + valueOfOperationEnabled +
+                                    " of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Gets read the valiw of the Operational Event register
+        /// </summary>
+        /// <returns>String value</returns>
+        public string GetStatusOperationEnabled()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("STAT:OPER:ENAB?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status operation enabled of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command set the value of the Operation NTR (NegativeTransition) register.
+        ///     When a bit in the Operation NTR register is set to 1, then a 1-to-0 
+        ///     transition of the corresponding bit in the Operation Condition 
+        ///     register causes that bit in the Operation Event register to be set.
+        /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        ///     <item>
+        ///         <description>
+        ///             If the same bits in both NTR and PTR registers are set to 1, then any
+        ///             transition of that bit at the Operation Condition register sets the
+        ///             corresponding bit in the Operation Event register.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <description>
+        ///             If the same bits in both NTR and PTR registers are set to 0, then no 
+        ///             transition of that bit at the Operation Condition register can set the
+        ///             corresponding bit in the Operation Event register.
+        ///         </description>
+        ///     </item>
+        /// </list>
+        ///     The Preset value are: NTR = 0; PTR = 32767
+        /// </remarks>
+        /// <param name="ntrValue">The contains the number of all registers in the registers.</param>
+        public void SetStatusOperationNtr(int ntrValue)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:OPER:NTR " + ntrValue + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status operation NTR of command. Reason :" + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Get value of the Operation NTR (NegativeTransition) value.
+        /// </summary>
+        /// <returns>The key message contains the binary sum of all bits set in the registers.</returns>
+        public int GetStatusOperationNtr()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:OPER:NTR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status operation NTR of command. Reason :" + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command set the value of the Operation PTR (PositiveTransition) register.
+        ///     When a bit of the Operation PTR register is set to 1, then a 0-to-1
+        ///     transition of the corresponding bit in the Operation Condition
+        ///     register causes that bit in the Operation Event register to be set.
+        /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        ///     <item>
+        ///         <description>
+        ///             If the same bits in both NTR and PTR registers are set to 1, then any
+        ///             transition of that bit at the Operation Condition register sets the
+        ///             corresponding bit in the Operation Event register.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <description>
+        ///             If the same bits in both NTR and PTR registers are set to 0, then no 
+        ///             transition of that bit at the Operation Condition register can set the
+        ///             corresponding bit in the Operation Event register.
+        ///         </description>
+        ///     </item>
+        /// </list>
+        ///     The Preset value are: NTR = 0; PTR = 32767
+        /// </remarks>
+        /// <param name="ptrValue">The contains the number of all registers in the registers.</param>
+        public void SetStatusOperationPtr(int ptrValue)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:OPER:PTR " + ptrValue + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status operation PTR of command. Reason :" + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Get value of the Operation PTR (PositiveTransition) value.
+        /// </summary>
+        /// <returns>The key message contains the number of all registers in the registers.</returns>
+        public int GetStatusOperationPtr()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:OPER:PTR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status operation PTR of command. Reason :" + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the value of the Questionable Event register. 
+        ///     The event register is a read-only register, which stores (latches) 
+        ///     all events that are passed by the Questionable NTR and / or PTR filter.
+        ///     Reading the Questionable Event register clears it.
+        ///     The bit configuration of the Questionable status registers is as follows:
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 15-11. Bit Value: undefined. Bit Name: undefined.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 10. Bit Value: 1024. Bit Name: UNR | The output is unregulated.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 9. Bit Value: 512. Bit Name: INH | The output is turned off by one of the external J1 inhibit signals.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 8-5. Bit Value: Undefined. Bit Name: Undefined.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 4. Bit Value: 16. Bit Name: OT | The output is disabled by the over-temperature protection.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 3. Bit Value: Undefined. Bit Name: Undefined.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 2. Bit Value: 4. Bit Name: PF | The output is disabled because AC power has failed.
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 1. Bit Value: 2. Bit Name: OC | The output is disabled by the over-current protection
+        ///             </description>
+        ///         </item>
+        ///         <item>
+        ///             <description>
+        ///                 Bit position: 0. Bit Value: 1. Bit Name: OV | The output is disabled by the over-voltage protection.
+        ///             </description>
+        ///         </item>
+        ///     </list>
+        /// </summary>
+        /// <returns>The responsible message contains the binary sum of all bits set in the recorder.</returns>
+        public int GetStatusQuestionable()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:QUES?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status questionable of command. Reason :" + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the value of the Questionable Condition register.
+        ///     That is a read-only register, which holds the real-time (unlatched)
+        ///     questionable status of the power supply.
+        /// </summary>
+        /// <returns>The responsible message contains the binary sum of all bits set in the recorder.</returns>
+        public int GetStatusQuestionableCondition()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:QUES:COND?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status questionable condition of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command read the value of the Questionable Enable register. 
+        ///     This register is a mask for enabling specific bits from the Questionable Event register 
+        ///     to set the questionable summary bit (QUES) of the Status Byte register. 
+        ///     This bit (bit 3) is the logical OR of all the Questionable Event register bits that are
+        ///     enabled by the Questionable Status Enable register.
+        ///     The Preset value = 0.
+        /// </summary>
+        /// <returns>The responsible message contains the binary sum of all bits set in the recorder.</returns>
+        public int GetStatusQuestionableEnable()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:QUES:ENAB?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status questionable enable of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command set the value of the Questionable Enable register.
+        ///     This register is a mask for enabling specific bits from the Questionable Event register 
+        ///     to set the questionable summary bit (QUES) of the Status Byte register. 
+        ///     This bit (bit 3) is the logical OR of all the Questionable Event register bits that are
+        ///     enabled by the Questionable Status Enable register.
+        ///     The Preset value = 0.
+        /// </summary>
+        /// <param name="valueOfEnable">The responsible message contains the binary sum of all bits set in the recorder</param>
+        public void SetStatusQuestionableEnable(int valueOfEnable)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:QUES:ENAB " + valueOfEnable + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status questionable enable in value " + valueOfEnable +
+                                    " of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command set the value of the Questionable NTR (Negative-Transition) register.
+        ///     These registers serve as polarity filters between the Questionable Condition 
+        ///     and Questionable Event registers to cause the following action:
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>
+        ///                 When a bit of the Questionable NTR register is set to 1, then a 1-to-0 transition
+        ///                 of the corresponding bit of the Questionable Condition register causes that bit 
+        ///                 in the Questionable Event register to be set.
+        ///             </description>
+        ///         </item>       
+        ///         <item>
+        ///             <description>
+        ///                 If the same bits in both NTR and PTR registers are set to 1, then any transition 
+        ///                 of that bit at the Questionable Condition register sets the corresponding bit in the 
+        ///                 Questionable Event register.
+        ///             </description>
+        ///         </item>        
+        ///         <item>
+        ///             <description>
+        ///                 If the same bits in both NTR and PTR registers are set to 0, then no
+        ///                 transition of that bit at the Questionable Condition register can set
+        ///                 the corresponding bit in the Questionable Event register.
+        ///             </description>
+        ///         </item>
+        ///     </list>
+        ///     The Preset values are: NTR = 0.
+        /// </summary>
+        /// <param name="valueOfNtr">Decimal value corresponding to the binary sum of the register bits.</param>
+        public void SetStatusQuestionableNtr(int valueOfNtr)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:QUES:NTR " + valueOfNtr + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status questionable NTR in value " + valueOfNtr +
+                                    " of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command set the value of the Questionable PTR (Positive-Transition) register.
+        ///     These registers serve as polarity filters between the Questionable Condition 
+        ///     and Questionable Event registers to cause the following action:
+        ///     <list type = "bullet" >
+        ///         <item>
+        ///             <description>
+        ///                 When a bit of the Questionable PTR register is set to 1, then a 0-to-1 transition
+        ///                 of the corresponding bit in the Questionable Condition register causes that bit 
+        ///                 in the Questionable Event register to be set.
+        ///             </description>
+        ///         </item>       
+        ///         <item>
+        ///             <description>
+        ///                 If the same bits in both NTR and PTR registers are set to 1, then any transition 
+        ///                 of that bit at the Questionable Condition register sets the corresponding bit in the 
+        ///                 Questionable Event register.
+        ///             </description>
+        ///         </item>        
+        ///         <item>
+        ///             <description>
+        ///                 If the same bits in both NTR and PTR registers are set to 0, then no
+        ///                 transition of that bit at the Questionable Condition register can set
+        ///                 the corresponding bit in the Questionable Event register.
+        ///             </description>
+        ///         </item>
+        ///     </list>
+        ///     The Preset values are: PTR = 32767.
+        /// </summary>
+        /// <param name="valueOfPtr">Decimal value corresponding to the binary sum of the register bits.</param>
+        public void SetStatusQuestionablePtr(int valueOfPtr)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("STAT:QUES:PTR  " + valueOfPtr + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status questionable ptr in value " + valueOfPtr +
+                                    " of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command get the value of the Questionable NTR (Negative-Transition) register.
+        /// </summary>
+        /// <returns>Decimal value corresponding to the binary sum of the register bits.</returns>
+        public int GetStatusQuestionableNtr()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:QUES:NTR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get status questionable ntr of command. Reason :" +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command get the value of the Questionable PTR (Positive-Transition) register.
+        /// </summary>
+        /// <returns>Decimal value corresponding to the binary sum of the register bits.</returns>
+        public int GetStatusQuestionablePtr()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("STAT:QUES:PTR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set status questionable ptr of command. Reason :" +
+                                    exception.Message);
+            }
+        }
 
         #endregion
 
