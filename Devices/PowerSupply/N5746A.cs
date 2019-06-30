@@ -33,6 +33,24 @@ namespace DevicesControlLibrary.Devices.PowerSupply
             Auto
         }
 
+        public enum CommunicateRlstate
+        {
+            /// <summary>
+            ///     The instrument is set to front panel control (front panel keys are active).
+            /// </summary>
+            Loc,
+
+            /// <summary>
+            ///     The instrument is set to remote interface control (front panel keys are active).
+            /// </summary>
+            Rem,
+
+            /// <summary>
+            ///     The front panel keys are disabled (the instrument can only be controlled via the remote interface).
+            /// </summary>
+            Rwl
+        }
+
         #endregion
 
         #region Private Members Variable
@@ -359,7 +377,7 @@ namespace DevicesControlLibrary.Devices.PowerSupply
         /// <summary>
         ///     This command stores the present state of the power supply to memory locations 0 through 15. 
         /// </summary>
-        /// <param name="state">Value of state number</param>
+        /// <param name="state">Value of state number to range 0-15</param>
         /// <remarks>All saved instrument states are lost when the unit is turned off.</remarks>
         public void SetSaveState(int state)
         {
@@ -1141,169 +1159,6 @@ namespace DevicesControlLibrary.Devices.PowerSupply
 
         #endregion
 
-        #region Trigger commands
-
-        #region Abort commands
-
-        /// <summary>
-        ///     This command cancels any trigger actions in progress and returns the
-        ///     trigger system to the IDLE state, unless INIT:CONT is enabled.
-        ///     It also resets the WTG bit in the Status Operation Condition register.
-        ///     ABORt is executed at power-on and upon execution of* RST.
-        /// </summary>
-        public void SetTriggerAbort()
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("ABOR;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set the abort of command of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        #endregion
-
-        #region Initiate commands
-
-        /// <summary>
-        ///     This command controls the enabling of output triggers.
-        ///     When a trigger is enabled, a trigger causes the specified triggering action to occur.
-        ///     If the trigger system is not enabled, all triggers are ignored.
-        /// </summary>
-        public void SetInitiate()
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("INIT;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set the enabling of output triggers of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        /// <summary>
-        ///     This command controls the enabling of output triggers.
-        ///     When a trigger is enabled, a trigger causes the specified triggering action to occur.
-        ///     If the trigger system is not enabled, all triggers are ignored.
-        /// </summary>
-        /// <param name="state">True - is on, False - is off</param>
-        public void SetInitiateContinuous(bool state)
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("INIT:CONT " + (state ? "ON" : "OFF") + ";");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set the enabling of output triggers of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        /// <summary>
-        ///     This command continuously initiates output triggers.
-        ///     The enabled state is On(1); the disabled state is Off(0).
-        ///     When disabled, the trigger system must be initiated for each 
-        ///     trigger with the INITiate command.
-        /// </summary>
-        /// <returns>True - is on, False - is off</returns>
-        public bool GetInitiateContinuous()
-        {
-            try
-            {
-                return _lanExchanger.SendWithRequestInt("INIT:CONT?;") == 1;
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to get the enabling of output triggers of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        #endregion
-
-        #region Trigger commands
-
-        /// <summary>
-        ///     If the trigger system has been initiated, this command generates an 
-        ///     immediate output trigger.
-        ///     When sent, the output trigger will:
-        ///     - Initiate an output change as specified by the CURR:TRIG or VOLT:TRIG settings.
-        ///     - Clear the WTG bits in the Status Operation Condition register after the trigger action has completed.
-        /// </summary>
-        public void SetTriggerImmediate()
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("TRIG;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set trigger immediate of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        /// <summary>
-        ///     This command selects the trigger source for the output trigger system.
-        ///     Only BUS can be selected as the trigger source.
-        /// </summary>
-        public void SetTriggerSource()
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("TRIG:SOUR BUS;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set trigger source in BUS of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        /// <summary>
-        ///     Get trigger source
-        /// </summary>
-        /// <returns>Value of trigger source</returns>
-        public string GetTriggerSource()
-        {
-            try
-            {
-                return _lanExchanger.SendWithRequestString("TRIG:SOUR?;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to get trigger source of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        /// <summary>
-        ///     This command generates a trigger when the trigger source is set to BUS.
-        ///     The command has the same affect as the Group Execute Trigger(GET) command.
-        /// </summary>
-        public void SetTriggerGenerated()
-        {
-            try
-            {
-                _lanExchanger.SendWithoutRequest("TRG*;");
-            }
-            catch (Exception exception)
-            {
-                throw new Exception("Failed to set generated trigger of command. Reason: " +
-                                    exception.Message);
-            }
-        }
-
-        #endregion
-
-        #endregion
-
         #region Status commands
 
         /// <summary>
@@ -1780,6 +1635,304 @@ namespace DevicesControlLibrary.Devices.PowerSupply
                                     exception.Message);
             }
         }
+
+        #endregion
+
+        #region System commands
+
+        /// <summary>
+        ///     This command configures the remote/local state of the instrument
+        ///     according to the following settings in <see cref="CommunicateRlstate"/>.
+        /// </summary>
+        public void SetSystemCommunicateRlstate(CommunicateRlstate communicateRlstate)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("SYST:COMM:RLST " + communicateRlstate + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set system communicate rlstate to value " + communicateRlstate +
+                                    " of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command return remote/local state of the instrument
+        /// </summary>
+        /// <returns></returns>
+        public CommunicateRlstate GetSystemCommunicateRlstate()
+        {
+            try
+            {
+                var response = _lanExchanger.SendWithRequestString("SYST:COMM:RLST?;");
+                switch (response)
+                {
+                    case "LOC":
+                    {
+                        return CommunicateRlstate.Loc;
+                    }
+                    case "REM":
+                    {
+                        return CommunicateRlstate.Rem;
+                    }
+                    case "RWL":
+                    {
+                        return CommunicateRlstate.Rwl;
+                    }
+                    default:
+                    {
+                        throw new Exception("Undefined returned state: " + response);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get remote/local state of the instrument of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the control connection port number. 
+        ///     This is used to open a control socket connection to the instrument.
+        /// </summary>
+        /// <returns>Integer value of port number</returns>
+        public int GetSystemCommunicateControlConnectionPortNumber()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("SYST:COMM:TCP:CONT?");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception(
+                    "Failed to get system communicate control connection port number of command. Reason: " +
+                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the next error number and its corresponding message 
+        ///     string from the error queue.
+        ///     The queue is a FIFO(first-in, first-out) buffer that stores errors as they occur.
+        ///     As it is read, each error is removed from the queue. 
+        ///     When all errors have been read, the query returns 0, NO ERROR. 
+        ///     If more errors are accumulated than the queue can hold, the last error in the queue 
+        ///     will be -350, TOO MANY ERRORS (see Appendix C for error codes)
+        /// </summary>
+        /// <returns>String, contains error code in format {code error},{error string}</returns>
+        public string GetSystemError()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("SYST:ERR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get system error of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This query returns the SCPI version number to which the instrument complies.
+        ///     The returned value is of the form YYYY.V, where YYYY represents the year 
+        ///     and V is the revision number for that year.
+        /// </summary>
+        /// <returns>String contains version information</returns>
+        public string GetSystemVersion()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("SYST:VERS?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get system version of command. Reason: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command restores the power supply to a state that was previously
+        ///     stored in memory locations 0 through 15 with the *SAV command.
+        ///     Note that you can only recall a state from a location that contains a previously-stored state. 
+        /// </summary>
+        /// <param name="stateNumber">Value of range 0-15</param>
+        public void SetSystemRclState(int stateNumber)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("*RCL " + stateNumber + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set system rcl in value " + stateNumber + " of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Trigger commands
+
+        #region Abort commands
+
+        /// <summary>
+        ///     This command cancels any trigger actions in progress and returns the
+        ///     trigger system to the IDLE state, unless INIT:CONT is enabled.
+        ///     It also resets the WTG bit in the Status Operation Condition register.
+        ///     ABORt is executed at power-on and upon execution of* RST.
+        /// </summary>
+        public void SetTriggerAbort()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("ABOR;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the abort of command of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Initiate commands
+
+        /// <summary>
+        ///     This command controls the enabling of output triggers.
+        ///     When a trigger is enabled, a trigger causes the specified triggering action to occur.
+        ///     If the trigger system is not enabled, all triggers are ignored.
+        /// </summary>
+        public void SetInitiate()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("INIT;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the enabling of output triggers of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command controls the enabling of output triggers.
+        ///     When a trigger is enabled, a trigger causes the specified triggering action to occur.
+        ///     If the trigger system is not enabled, all triggers are ignored.
+        /// </summary>
+        /// <param name="state">True - is on, False - is off</param>
+        public void SetInitiateContinuous(bool state)
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("INIT:CONT " + (state ? "ON" : "OFF") + ";");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set the enabling of output triggers of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command continuously initiates output triggers.
+        ///     The enabled state is On(1); the disabled state is Off(0).
+        ///     When disabled, the trigger system must be initiated for each 
+        ///     trigger with the INITiate command.
+        /// </summary>
+        /// <returns>True - is on, False - is off</returns>
+        public bool GetInitiateContinuous()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestInt("INIT:CONT?;") == 1;
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get the enabling of output triggers of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region Trigger commands
+
+        /// <summary>
+        ///     If the trigger system has been initiated, this command generates an 
+        ///     immediate output trigger.
+        ///     When sent, the output trigger will:
+        ///     - Initiate an output change as specified by the CURR:TRIG or VOLT:TRIG settings.
+        ///     - Clear the WTG bits in the Status Operation Condition register after the trigger action has completed.
+        /// </summary>
+        public void SetTriggerImmediate()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("TRIG;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set trigger immediate of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command selects the trigger source for the output trigger system.
+        ///     Only BUS can be selected as the trigger source.
+        /// </summary>
+        public void SetTriggerSource()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("TRIG:SOUR BUS;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set trigger source in BUS of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Get trigger source
+        /// </summary>
+        /// <returns>Value of trigger source</returns>
+        public string GetTriggerSource()
+        {
+            try
+            {
+                return _lanExchanger.SendWithRequestString("TRIG:SOUR?;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to get trigger source of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        /// <summary>
+        ///     This command generates a trigger when the trigger source is set to BUS.
+        ///     The command has the same affect as the Group Execute Trigger(GET) command.
+        /// </summary>
+        public void SetTriggerGenerated()
+        {
+            try
+            {
+                _lanExchanger.SendWithoutRequest("TRG*;");
+            }
+            catch (Exception exception)
+            {
+                throw new Exception("Failed to set generated trigger of command. Reason: " +
+                                    exception.Message);
+            }
+        }
+
+        #endregion
 
         #endregion
 
