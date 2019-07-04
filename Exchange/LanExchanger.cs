@@ -29,13 +29,36 @@ namespace DevicesControlLibrary.Exchange
         /// </summary>
         private Socket Socket { get; set; }
 
+        /// <summary>
+        ///     End point
+        /// </summary>
+        private EndPoint EndPoint { get; set; }
+
+        /// <summary>
+        ///     Object for locking
+        /// </summary>
+        private object LockObject { get; set; }
+
         #endregion
 
+        #region Constructor
+
+        /// <summary>
+        ///     Constructor.
+        ///     Set ip address and port
+        /// </summary>
+        /// <param name="ipAddress">Ip address device</param>
+        /// <param name="ipPort">Ip port device</param>
         public LanExchanger(string ipAddress, int ipPort)
         {
             IpAddress = IPAddress.Parse(ipAddress);
             IpPort = ipPort; // 1 -65 535
+            LockObject = new object();
         }
+
+        #endregion
+
+        #region Public Methods
 
         /// <summary>
         ///     Sending a command to the device and returning the result as an integer value
@@ -81,61 +104,107 @@ namespace DevicesControlLibrary.Exchange
                 : QueryControl(command));
         }
 
-        public void InitConnection()
-        {
-        }
+        #endregion
 
         /// <summary>
-        ///     
+        ///     Initial connection
         /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public string QueryControl(string command)
+        public void InitConnection()
+        {
+            if (Socket == null)
+            {
+                Socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
+                if (EndPoint == null)
+                {
+                    EndPoint = new IPEndPoint(IpAddress,IpPort);
+                }
+
+                var ping = new Ping();
+                var pingReply = ping.Send(IpAddress, 5000);
+
+                if (pingReply != null && pingReply.Status != IPStatus.Success)
+                {
+                    throw new Exception("Device not responding");
+                }
+                Socket.Connect(EndPoint);
+            }
+        }
+
+        #region Private Methods
+
+        /// <summary>
+        ///     Processing of query send / request    
+        /// </summary>
+        /// <param name="command">String, contains command</param>
+        /// <returns>
+        ///     String contains the result in the case of 
+        ///     a request with a response and null in the 
+        ///     case of a request withput an answer
+        /// </returns>
+        private string QueryControl(string command)
         {
             try
             {
                 RequestSending(command);
-                return command.IndexOf("?", StringComparison.CurrentCulture) >= 0 ? ResponseReceive() : "";
+                return command.IndexOf("?", StringComparison.CurrentCulture) >= 0 ? ResponseReceive() : null;
             }
             catch (Exception exception)
             {
                 throw new Exception(exception.Message);
             }
+            finally
+            {
+                SocketClose();
+            }
         }
 
         /// <summary>
-        ///     
+        ///     Закрывает сокет
         /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public bool RequestSending(string command)
+        private void SocketClose()
         {
-            var ping = new Ping();
-            var pingReply = ping.Send(IpAddress, 5000);
-
-            if (pingReply != null && pingReply.Status != IPStatus.Success)
+            lock (LockObject)
             {
-                throw new Exception("Device not responding");
+                if (Socket == null) return;
+                Socket.Shutdown(SocketShutdown.Both);
+                Socket.Close(1);
+                Socket = null;
             }
-            else
-            {
-                Socket.Send(Encoding.ASCII.GetBytes(command + Environment.NewLine));
-            }
-
-            return true;
         }
 
         /// <summary>
-        /// 
+        ///     Send request of command
         /// </summary>
-        /// <returns></returns>
-        public string ResponseReceive()
+        /// <param name="command">String contains command</param>
+        private void RequestSending(string command)
         {
-            var buffer = new byte[256];
-            buffer = new byte[buffer.Length];
-
-            try
+            lock (LockObject)
             {
+                var ping = new Ping();
+                var pingReply = ping.Send(IpAddress, 5000);
+
+                if (pingReply != null && pingReply.Status != IPStatus.Success)
+                {
+                    throw new Exception("Device not responding");
+                }
+                else
+                {
+                    Socket.Send(Encoding.ASCII.GetBytes(command + Environment.NewLine));
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Receive response after request
+        /// </summary>
+        /// <returns>String, contains result</returns>
+        private string ResponseReceive()
+        {
+            lock (LockObject)
+            {
+                var buffer = new byte[1024];
+                buffer = new byte[buffer.Length];
+
                 int readBytes;
                 do
                 {
@@ -144,10 +213,8 @@ namespace DevicesControlLibrary.Exchange
 
                 return Encoding.ASCII.GetString(buffer, 0, readBytes);
             }
-            catch (Exception exception)
-            {
-                throw new Exception(exception.Message);
-            }
         }
+
+        #endregion
     }
 }
