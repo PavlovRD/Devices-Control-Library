@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DevicesControlLibrary
+namespace DevicesControlLibrary.Devices.PowerSupply.Subsystems.Output
 {
-    public class DeviceExchangeManager
+    public interface ISubsystemOutput
     {
-
     }
 }

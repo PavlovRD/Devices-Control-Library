@@ -40,9 +40,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DeviceExchangeManager.cs" />
-    <Compile Include="Devices\PowerSupply\N5746A.cs" />
+    <Compile Include="DevicesManager.cs" />
+    <Compile Include="Devices\PowerSupply\APowerSupply.cs" />
+    <Compile Include="Devices\PowerSupply\AgilentN5746A\N5746A.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Calibration\ISubsystemCalibration.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Calibration\SubsystemCalibration.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Common\ISubsystemCommon.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Common\SubsystemCommon.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Measure\ISubsystemMeasure.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Measure\SubsystemMeasure.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Output\ISubsystemOutput.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Output\SubsystemOutput.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Source\ISubsystemSource.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Source\SubsystemSource.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Status\ISubsystemStatus.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Status\SubsystemStatus.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\System\ISubsystemSystem.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\System\SubsystemStatus.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Trigger\ISubsystemTrigger.cs" />
+    <Compile Include="Devices\PowerSupply\Subsystems\Trigger\SubsystemTrigger.cs" />
     <Compile Include="Devices\SignalGenerator\Smb100A.cs" />
+    <Compile Include="Exchange\ILanExchanger.cs" />
     <Compile Include="Exchange\LanExchanger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
