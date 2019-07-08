@@ -60,7 +60,23 @@ namespace DevicesControlLibrary.Exchange
 
         #region Public Methods
 
-        /// <summary>
+	/// <summary>
+        ///     Sending a command to the device and returning the result as an int double or string values
+        /// </summary>
+        /// <param name="command">String, contains command</param>
+        /// <returns>Int double or string values of response</returns>
+        /// 
+        public dynamic SendWithRequest(string command)
+        {
+            var temp = QueryControl(command);
+            if (int.TryParse(temp, NumberStyles.Integer, CultureInfo.CurrentCulture, out int @int))
+                return @int;
+            if (double.TryParse(temp, NumberStyles.AllowDecimalPoint, CultureInfo.CurrentCulture, out double @double))
+                return @double;
+            return temp;
+        }        
+
+	/// <summary>
         ///     Sending a command to the device and returning the result as an integer value
         /// </summary>
         /// <param name="command">String, contains command</param>
