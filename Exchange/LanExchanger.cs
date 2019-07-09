@@ -69,14 +69,25 @@ namespace DevicesControlLibrary.Exchange
         public dynamic SendWithRequest(string command)
         {
             var temp = QueryControl(command);
-            if (int.TryParse(temp, NumberStyles.Integer, CultureInfo.CurrentCulture, out int @int))
+            if (int.TryParse(temp, NumberStyles.Integer, CultureInfo.CreateSpecificCulture("en-US"), out int @int))
                 return @int;
-            if (double.TryParse(temp, NumberStyles.AllowDecimalPoint, CultureInfo.CurrentCulture, out double @double))
+            if (double.TryParse(temp, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-US"), out double @double))
                 return @double;
             return temp;
-        }        
+        }
 
-	/// <summary>
+        /// <summary>
+        ///     Sending a command to the device without returning
+        /// </summary>
+        /// <param name="command">String, contains command</param>
+        public void SendWithoutRequest_(string command)
+        {
+            if (command.Contains(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator))
+                command.Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, ".");
+            QueryControl(command);
+        }
+
+        /// <summary>
         ///     Sending a command to the device and returning the result as an integer value
         /// </summary>
         /// <param name="command">String, contains command</param>
